@@ -1,11 +1,40 @@
 # Triangle Rule — 3-Source Verification
 
-Before and DURING every feature that replicates external behavior, verify
-against 3 independent sources. Gap in any one = drift = bug.
+Before and DURING every feature, verify against 3 independent sources.
+**Gap in any one = drift = bug.**
+
+This rule applies to ANY project — not just ones that replicate external
+systems. The three sources adapt to your context. See "Universal form"
+below.
 
 ---
 
-## The three sources
+## Universal form (applies to all projects)
+
+| Source | What it is | Examples |
+|---|---|---|
+| **1. Evidence** | The ground truth for what you're building | User's words in this chat, profiler output, error log, product spec, API response, screenshot of real system |
+| **2. Intention** | The plan for THIS specific feature | Phase plan docs, design doc / ADR, wireframe, ticket description, team decision |
+| **3. Existing code** | What your codebase already has | Existing helpers (grep), existing API patterns, existing validators, existing UI components |
+
+**Any gap = drift = bug:**
+- Evidence ≠ intention → "building the wrong thing" — the plan diverged from requirements
+- Intention ≠ code → "drifted from plan" — implementation took shortcuts not in spec
+- Code ≠ evidence → "wrong implementation" — code doesn't match what was asked
+
+**Why this works for ANY project:**
+
+- **Greenfield app** → evidence = user requirement, intention = your design, code = existing shared utils
+- **Replication feature** → evidence = scraped external system, intention = your plan, code = existing patterns
+- **Bug fix** → evidence = error + repro steps, intention = correct behavior spec, code = existing unit tests
+- **Performance optimization** → evidence = profiler data, intention = the optimization plan, code = current implementation
+- **API design** → evidence = what callers need (client code), intention = the endpoint spec, code = existing REST patterns
+
+---
+
+## The three sources (replication variant — the original)
+
+For projects that replicate external behavior:
 
 1. **External reference** — the real system you're replicating
    - API docs + live API inspection
@@ -152,6 +181,80 @@ Depends on your team's process:
 >
 > Fix: every new endpoint reference must be curl-verified + saved to
 > docs/external-scan/.
+
+## When to re-scan (the Triangle Rule is not one-time)
+
+The Triangle Rule applies on FIRST build. It also applies on EXTENSION.
+Re-scan triggers:
+
+| Trigger | Why re-scan |
+|---|---|
+| Adding a field / option to a previously-built feature | The external system may have changed; your original scan may have been partial |
+| User reports "it doesn't match the real thing" | Drift has already happened — stop, re-capture, compare |
+| External system version bump (API v3 → v4, etc.) | Schema changes are likely; old artifacts are stale |
+| ≥ 6 months since last scan on a live feature | Slow drift — quarterly rescan on any feature still under active development |
+
+**Anti-example (V10 in one project):** Phase 11.2 shipped a product-group
+schema with 4 type options. ProClinic has exactly 2. The original Triangle
+scan was incomplete (the create-form artifact was captured, but the type
+options were not inspected). When Phase 11.9 extended the feature, a full
+re-scan caught the mismatch. Fix: always capture option lists + enums
+explicitly, not just field names.
+
+**Rule:** when extending a previously-built feature, treat it like a new
+feature for the Triangle Rule. The original scan may be months old.
+
+---
+
+## Field-completeness during external-source capture
+
+When capturing external source data (API response, form fields, scraper
+output), **preserve every field** the downstream mapper will read.
+Truncating at capture = silent null in UI without error.
+
+**Pattern (wrong):**
+```js
+// Normalizer captures only the fields you think you need
+function normalizeProduct(raw) {
+  return {
+    id: raw.id,
+    name: raw.product_name,
+    price: raw.price,
+  };
+}
+// Later: mapper needs raw.product_label — it's null, no error thrown
+```
+
+**Pattern (right):**
+```js
+// Normalizer spreads all fields, then selectively renames/normalizes
+function normalizeProduct(raw) {
+  return {
+    ...raw,                          // preserve everything
+    name: raw.product_name,          // rename canonical fields
+    label: raw.product_label ?? '',  // explicit fallback only when safe
+    price: Number(raw.price) || 0,
+  };
+}
+```
+
+**Audit checklist for sync normalizers:**
+```bash
+# For each normalizer, what fields does the downstream mapper use?
+grep -rn "\.productLabel\|\.product_label\|\.label" src/lib/mappers.js
+# Cross-check: does the normalizer output those keys?
+grep -n "productLabel\|product_label\|label" src/lib/normalizers.js
+```
+
+If mapper reads a key that normalizer doesn't write → silent null.
+Add it to the normalizer AND add it to the external-scan capture step
+so the artifact proves the field exists in source.
+
+**Why this is a Triangle Rule issue:** if your capture tool only shows
+field names (not values), you can't verify shape. Always capture a
+sample response with real data, not just schema.
+
+---
 
 ## How to grow this rule
 

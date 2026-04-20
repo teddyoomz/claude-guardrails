@@ -182,6 +182,39 @@ done
 
 **Fix:** add `data-field="fieldName"` to every input that has validation.
 
+## AV13 — Sync normalizers that drop fields
+
+When syncing from external sources, normalizers that only map "known"
+fields silently drop everything else. Downstream mappers then read
+fields that return `null` with no error — hard to trace.
+
+```bash
+# For each normalizer function, list the fields it explicitly sets
+grep -A 40 "function normalize[A-Z]" src/lib/normalizers.js | grep ":"
+
+# Cross-check against all field reads in mappers
+grep -n "\.\w\+Label\|\.\w\+Name\|\.\w\+Type" src/lib/mappers.js
+```
+
+If mapper reads a key that normalizer doesn't write → silent null.
+
+**Pattern to prefer:**
+```js
+// Spread all source fields first, then normalize/rename selectively
+function normalizeProduct(raw) {
+  return {
+    ...raw,                            // preserves every field
+    name: raw.product_name,            // rename canonical
+    label: raw.product_label ?? '',    // explicit fallback
+    price: Number(raw.price) || 0,     // coerce type
+  };
+}
+```
+
+**Fix:** in normalizers, use spread-then-override rather than explicit
+key enumeration. Add the dropped field to the normalizer AND to the
+external-scan artifact so its existence in the source is documented.
+
 ---
 
 ## How to grow this skill

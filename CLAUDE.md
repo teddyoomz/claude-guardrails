@@ -43,6 +43,7 @@ tool/skill decision tree, pre-commit checklist.
 | Triangle Rule usage | `docs/triangle-rule.md` |
 | Continuous Improvement cycle | `docs/continuous-improvement.md` |
 | Capability expansion (Rule G + G.2) | `docs/capability-expansion.md` |
+| Feedback loop (project → guardrails) | `docs/feedback-loop.md` |
 | {Your project-specific docs} | `docs/{...}` |
 
 ---

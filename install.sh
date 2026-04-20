@@ -66,6 +66,9 @@ for sub in rules skills hooks; do
   fi
 done
 
+# .claude/ root templates (settings.template.json — copy as template only)
+copy_if_not_exists "$SRC/.claude/settings.template.json" "$TARGET/.claude/settings.template.json"
+
 # .agents/
 for item in "$SRC/.agents"/*; do
   name="$(basename "$item")"
@@ -99,14 +102,14 @@ echo "     - .claude/rules/02-workflow.md (test + build + deploy commands)"
 echo "     - .claude/rules/03-stack.md (stack-specific gotchas)"
 echo "     - .claude/rules/04-culture.md (domain / cultural rules)"
 echo ""
-echo "  2. Optional: enable the PostToolUse hook. Add to .claude/settings.json:"
-echo '       {'
-echo '         "hooks": {'
-echo '           "PostToolUse": ['
-echo '             { "matcher": "Edit|Write", "command": "./.claude/hooks/PostToolUse-edit-verify.sh" }'
-echo '           ]'
-echo '         }'
-echo '       }'
+echo "  2. Enable hooks (strongly recommended — makes rules self-enforcing):"
+echo "     Copy .claude/settings.template.json → .claude/settings.json"
+echo "     Fill in [FILL-IN] placeholders. The template has 4 hook types:"
+echo "       PostToolUse  — pre-commit checklist after every Edit/Write"
+echo "       PreToolUse   — deploy guard (block backend-only files from prod deploy)"
+echo "       SessionStart — mandatory first-read reminder on new chat"
+echo "       UserPromptSubmit — iron-clad rules injected every turn"
+echo "     Without hooks, rules are voluntary. With hooks, they fire automatically."
 echo ""
 echo "  3. Read docs/methodology.md — this is the core reference."
 echo ""

@@ -29,9 +29,10 @@ grep can't find and audits can't verify.
 ```
 your-project/
 ├── .claude/
-│   ├── rules/         ← 5 rule files (iron-clad, workflow, stack, culture)
-│   ├── skills/        ← Audit skills with numbered invariants
-│   └── hooks/         ← Pre-commit grep-pair verification
+│   ├── rules/                  ← 5 rule files (iron-clad, workflow, stack, culture)
+│   ├── skills/                 ← Audit skills with numbered invariants
+│   ├── hooks/                  ← Pre-commit grep-pair verifier (shell script)
+│   └── settings.template.json  ← 4 hook types: PostToolUse/PreToolUse/SessionStart/UserPromptSubmit
 ├── .agents/
 │   ├── AGENTS.md      ← Trust priority (rules always win on conflict)
 │   ├── active.md      ← Hot-state for next session
@@ -41,7 +42,8 @@ your-project/
     ├── violation-log.md      ← Catalog of past bugs + lessons
     ├── triangle-rule.md      ← 3-source verification pattern
     ├── continuous-improvement.md  ← Bug → test + rule + skill cycle
-    └── capability-expansion.md    ← Rule G + G.2 decision tree (+ /capability-scout skill)
+    ├── capability-expansion.md    ← Rule G + G.2 decision tree (+ /capability-scout skill)
+    └── feedback-loop.md           ← bidirectional learning: project → guardrails
 ```
 
 ## Install

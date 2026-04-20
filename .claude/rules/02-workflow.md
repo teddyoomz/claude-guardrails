@@ -92,6 +92,28 @@ not for the session. Ask again.
 
 ---
 
+### Scope expansion mid-turn
+
+When a user expands scope during a task ("also fix X", "make sure Y
+propagates too"), **capture immediately** before continuing:
+
+1. Add the expanded item to a todo list or the active session notes.
+2. Confirm verbally: "Got it — also fixing X. Current task: A → then X."
+3. Finish A, THEN X — don't interleave.
+
+**Why:** absorbing scope silently causes two failures:
+- A gets finished, X gets forgotten
+- A doesn't finish because you pivoted mid-stream
+
+**Anti-pattern:** "I'll remember to do X after A." You won't — long
+conversations compress context and the user instruction gets lost.
+
+**Enforcement:** if the project uses TodoWrite or equivalent, call it
+immediately on scope expand. If not, state the updated task list in
+your next reply so the user sees it was captured.
+
+---
+
 ### Git safety
 
 - Never edit `git config` without explicit user request

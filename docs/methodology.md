@@ -169,6 +169,78 @@ Fix: never summarize. Split / expand / reorganize, but keep every rule's
 text intact. Deprecation is the only way to remove text — and even
 deprecated rules stay in file as historical reference.
 
+### Anti-pattern 5: Migration fallback that hides state
+
+When migrating consumers from legacy source X → canonical source Y,
+leaving `Y empty ? fallback X` in the consumer hides the actual migration
+state. When the user legitimately clears Y, they expect empty state — not
+silent fallback to the old source.
+
+Bad:
+```js
+// Looks safe — graceful degradation
+const items = getFromNew() || getFromLegacy();
+```
+
+Good:
+```js
+// Shows the actual state of the migration
+const items = getFromNew();
+// If empty, that IS the state — show empty, not legacy data
+```
+
+Why: fallbacks were appropriate during the migration period when Y was
+being populated. Once migration is complete, the fallback:
+- Hides bugs (Y is wrong, but legacy fallback masks the error)
+- Hides user intent (user deleted from Y; fallback resurrects the data)
+- Prevents testing (Y always looks "fine" even when broken)
+
+**Rule:** migrations have two phases. Phase 1: Y empty → fallback X
+(bootstrap). Phase 2: Y populated → remove fallback (production).
+Schedule and commit the fallback removal as part of the migration plan,
+not as a follow-up cleanup.
+
+**V-example:** an adapter was reading medication_groups from
+`getAllMasterDataItems('medication_groups')`. When migrated to
+`be_product_groups`, the fallback `list.length === 0 ? legacyFallback()`
+was left in. User deleted all records from `be_product_groups` to test
+the CRUD — the UI showed all the records back (from legacy), making it
+look like delete wasn't working. Fix: remove fallback, trust the new
+canonical source.
+
+---
+
+### Anti-pattern 6: Adapter registries that drift from the canonical list
+
+When you use an adapter pattern to abstract "which entities have been
+migrated to the new canonical store" (e.g. `BE_BACKED_TYPES = ['A', 'B']`),
+the registry IS the source of truth for "is this entity migrated?".
+
+Any consumer, UI label, or status indicator that reads the registry
+must see the same truth. When the registry drifts (entity migrated but
+not added to registry, or vice versa), consumers show contradictory state.
+
+```js
+// Registry drives all downstream logic
+const BE_BACKED_TYPES = Object.freeze({
+  products: 'be_products',
+  courses: 'be_courses',
+  // When 'orders' migrates, it MUST be added here at the same time
+});
+
+// Status badge reads registry — must match what's actually in be_*
+const status = BE_BACKED_TYPES[type] ? 'migrated' : 'legacy';
+```
+
+**Rule:** every entity migration requires TWO commits:
+1. The migration code (new be_* collection + CRUD)
+2. The registry update (add to BE_BACKED_TYPES or equivalent)
+
+Never separate these. The registry is an invariant — grep it in audit
+skills to verify the count matches the actual number of migrated entities.
+
+---
+
 ### Anti-pattern 5: Auto-compressed memory
 
 Using vector DB / AI summary to store project context = drift built-in.

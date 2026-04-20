@@ -1,0 +1,65 @@
+{
+  "// SETUP": [
+    "This is a template. Copy or merge into your .claude/settings.json.",
+    "Replace every [FILL-IN] placeholder with project-specific content.",
+    "Hooks fire automatically — no manual invocation needed per turn.",
+    "All 4 hook types are generalizable; customize content per your stack.",
+    "The additionalContext string is injected into Claude's context before",
+    "it responds — use it to reinforce rules that drift in long sessions."
+  ],
+
+  "hooks": {
+
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"additionalContext\": \"[HOOK after Edit/Write] PRE-COMMIT CHECKLIST: (a) [FILL-IN: test command — e.g. npm test -- --run] ALL PASS (b) [FILL-IN: build command — e.g. npm run build] clean — catches Edit silent-fail that tests miss (c) run area audit skill matching files touched (d) GREP-PAIR: every router case has a matching handler def, count must match (e) trace at least one real caller for mutation paths. [EDIT-TOOL SILENT-FAIL TRAP] A parameter typo causes the Edit tool to error silently — always grep the expected text to confirm it landed. See .claude/rules/02-workflow.md for full checklist.\"}'"
+          }
+        ],
+        "// WHY": "V6 anti-example: agent called Edit with a param typo, function body never landed, claimed committed. Runtime crash in production. This hook injects the pre-commit checklist after every file write so it can not be skipped."
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\" 2>/dev/null || echo \"\"); if echo \"$CMD\" | grep -qE \"[FILL-IN: deploy command pattern — e.g. vercel --prod]\"; then if echo \"$CMD\" | grep -qE \"[FILL-IN: areas that are commit-only, never deployed — e.g. (backend|Backend|admin-only)]\"; then echo \"BLOCKED: [FILL-IN: reason message — e.g. Backend files are commit-only. Use git push only. vercel --prod = Vercel cost for files that run locally.].\" >&2; exit 2; fi; fi; exit 0'",
+            "// WHY": "Prevents deploying file areas that should only be committed (e.g. backend-only tabs, dev-only scaffolding, admin-only dashboards). Two FILL-IN patterns: first detects deploy command, second detects the blocked area."
+          }
+        ]
+      }
+    ],
+
+    "SessionStart": [
+      {
+        "matcher": "compact|resume|startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"additionalContext\": \"[MANDATORY FIRST READ: .claude/rules/00-session-start.md — character + expectations + iron-clad rules A-H + past violations V1-Vn + pre-commit checklist. READ BEFORE ANY TOOL CALL.] [IRON-CLAD SUMMARY] A: bug → revert, never patch forward. B: [FILL-IN: deploy safety probe — e.g. probe unauth write paths before + after firestore rules deploy]. C: Rule of 3 / crypto.getRandomValues for tokens / no uid in public docs / no allow:if-true without comment. D: every bug → adversarial test + rule update + audit invariant. E: [FILL-IN: data-boundary rule — e.g. backend UI reads our DB only]. F: Triangle Rule — capture external ref + plan + existing code before writing. G: load deferred tools/skills as needed — rules still apply. H: [FILL-IN: data-ownership rule]. [DEPLOY] Requires explicit THIS-TURN authorization — prior auth does not roll over to next commit or next turn.\"}'"
+          }
+        ],
+        "// WHY": "Without a SessionStart hook, the agent starts cold with no awareness of the iron-clad rules. The hook injects a mandatory-read reminder even if the user forgets to invoke /session-start manually."
+      }
+    ],
+
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"additionalContext\": \"[IRON-CLAD PRE-PROMPT — every turn] A: bug → revert. B: [FILL-IN: deploy safety short form]. C: Rule of 3 / crypto tokens / lean schema / no uid leaks. D: bug → test + rule + audit invariant. E: [FILL-IN: data boundary short form]. F: Triangle — capture before guessing URL/method/field. G: load tools/skills on demand (no ask). Deploy = new explicit ask every turn. Full rules: .claude/rules/00-session-start.md.\"}'"
+          }
+        ],
+        "// WHY": "Iron-clad rules drift in long conversations. Injecting a summary every prompt keeps the 8 rules in active context without the agent having to re-read the rule files each turn. Pair with rules/00-session-start.md for the full text."
+      }
+    ]
+
+  }
+}
