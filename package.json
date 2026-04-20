@@ -1,0 +1,39 @@
+{
+  "name": "claude-guardrails",
+  "version": "0.1.0",
+  "description": "Grep-auditable rule enforcement for Claude Code. No AI compression. Human review at every layer.",
+  "bin": {
+    "claude-guardrails": "./install.sh"
+  },
+  "scripts": {
+    "install-to": "./install.sh",
+    "test": "echo \"No runtime tests — content-only package. See docs/methodology.md.\""
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai-coding",
+    "rules",
+    "memory",
+    "audit",
+    "cross-session",
+    "guardrails",
+    "anti-drift"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "files": [
+    ".claude/",
+    ".agents/",
+    "docs/",
+    "CLAUDE.md",
+    "SESSION_HANDOFF.md",
+    "install.sh",
+    "README.md",
+    "LICENSE"
+  ]
+}
