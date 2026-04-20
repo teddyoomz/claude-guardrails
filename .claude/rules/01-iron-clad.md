@@ -131,14 +131,67 @@ Triangle = you verify against 3 independent sources before writing.
 ### G. Dynamic Capability Expansion — ALLOWED, rules A-F still apply
 
 - **Deferred tools** in system prompt → load via `ToolSearch` as needed. No ask.
+  Bulk-load related sets in one query (e.g. `query:"computer-use" max_results:30`),
+  not `select:<one_tool>` at a time.
 - **Missing capability** → check user-invocable skill list; build via
-  `/skill-creator` if nothing fits.
+  `/skill-creator` (or hand-copy `_template/SKILL.md`) if nothing fits.
 - **New audit skill** → must include grep patterns + numbered invariants (per D)
+- **Uncertain which tier applies** → invoke `/capability-scout "<task>"` — it
+  returns a ranked recommendation (Tier 1..5) and the literal next-action command.
 
 **Hard constraints** — new tool/skill calls still pass rules A-F:
 - Loading `WebFetch` ≠ permission to fetch arbitrary URLs from restricted files
 - Loading `Write` ≠ permission to create files outside sanctioned paths
 - New collections still need reader+writer+justification (C3)
+- A dynamic tool call that bypasses an iron-clad rule = same severity as any
+  other violation. **Audit rules override capability.**
+
+**Ask user ONLY for:** paid API integrations, new Anthropic Plugin install,
+writes to external shared state (Slack/email/JIRA/cross-account cloud), or
+destructive irreversible actions. **Never ask for** tool loading or skill
+invocation — those are auto-allowed.
+
+**Reference:** `docs/capability-expansion.md` (decision tree + anti-patterns),
+`.claude/skills/capability-scout/SKILL.md` (automated form).
+
+---
+
+### G.2. Promotion Trigger — ≥ 3 repetitions = new skill
+
+**Companion to G.** When the agent does the same manual pattern 3+ times in
+a session or project → **promote it to a skill**, don't keep re-doing it
+ad-hoc.
+
+**Why:** Rule G allows on-demand capability. G.2 makes the toolkit **compound**
+— every recurring manual pattern gets captured, so the next session starts
+smarter. Without G.2, G's freedom leaks into perpetual rework.
+
+**Trigger criteria (all three must be YES):**
+1. Same task ≥ 3 times in this session or recent project history
+2. Reusable (not one-shot / not this-bug-specific)
+3. Expressible as grep-auditable invariants OR a deterministic decision tree
+
+If YES to all three → promote now. Use `/capability-scout` for a starter
+recommendation, or hand-copy `.claude/skills/_template/SKILL.md`.
+
+**Scope decision:**
+- **User-level** (`~/.claude/skills/<name>/SKILL.md`) — reusable across
+  projects (stack-agnostic, or applies to any project with similar stack)
+- **Project-level** (`.claude/skills/<name>/SKILL.md`) — specific to this
+  codebase or domain
+
+**Anti-example (the drift G.2 prevents):**
+- Session 1: agent runs `grep X | awk Y | sort` three times while auditing.
+- Session 2: same incantation, five more times, different audit target.
+- Session 3: user asks "why is this so slow?" — because nothing got captured.
+  Should have been promoted on session 1's 3rd invocation.
+
+**Hard constraint:** G.2 promotion still passes rules A-F — new skills don't
+bypass audit, security, or data-boundary rules. A freshly-promoted skill that
+violates Rule E is the same severity as any other violation.
+
+**Enforcement:** `.claude/skills/capability-scout/SKILL.md` (CS5 invariant)
+encodes this decision tree. `docs/capability-expansion.md` is the reference.
 
 ---
 

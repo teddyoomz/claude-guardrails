@@ -27,6 +27,7 @@ tool/skill decision tree, pre-commit checklist.
 - **E. [YOUR-DATA-BOUNDARY-RULE]** — e.g. "backend reads our DB only"
 - **F. Triangle Rule** — 3 sources before replicating external features
 - **G. Dynamic Capability Expansion** — load tools/skills as needed, rules still apply
+- **G.2. Promotion Trigger** — same manual pattern ≥ 3 times → promote to skill (see `/capability-scout`)
 - **H. [YOUR-DATA-OWNERSHIP-RULE]** — e.g. "our data canonical, external = seed only"
 
 ---
@@ -41,6 +42,7 @@ tool/skill decision tree, pre-commit checklist.
 | Violation log format + examples | `docs/violation-log.md` |
 | Triangle Rule usage | `docs/triangle-rule.md` |
 | Continuous Improvement cycle | `docs/continuous-improvement.md` |
+| Capability expansion (Rule G + G.2) | `docs/capability-expansion.md` |
 | {Your project-specific docs} | `docs/{...}` |
 
 ---

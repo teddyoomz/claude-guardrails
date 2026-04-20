@@ -40,7 +40,8 @@ your-project/
     ├── methodology.md        ← How to write rules that don't drift
     ├── violation-log.md      ← Catalog of past bugs + lessons
     ├── triangle-rule.md      ← 3-source verification pattern
-    └── continuous-improvement.md  ← Bug → test + rule + skill cycle
+    ├── continuous-improvement.md  ← Bug → test + rule + skill cycle
+    └── capability-expansion.md    ← Rule G + G.2 decision tree (+ /capability-scout skill)
 ```
 
 ## Install
