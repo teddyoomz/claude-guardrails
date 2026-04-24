@@ -30,20 +30,32 @@ grep can't find and audits can't verify.
 your-project/
 ├── .claude/
 │   ├── rules/                  ← 5 rule files (iron-clad, workflow, stack, culture)
-│   ├── skills/                 ← Audit skills with numbered invariants
+│   ├── skills/                 ← Audit + meta skills with numbered invariants
+│   │   ├── audit-anti-vibe-code/    ← Rule-of-3, crypto, orphan collections
+│   │   ├── audit-rules/             ← Lint the rule files themselves (LR1-LR10)
+│   │   ├── audit-health/            ← Methodology adoption dashboard (H1-H10)
+│   │   ├── capability-scout/        ← Classify a task → Tier 1-5 (CS1-CS8)
+│   │   ├── research-gap/            ← 5-tier research before guessing (RG1-RG8)
+│   │   ├── skill-autoinstall/       ← Find + install skill/tool/MCP (SA1-SA7)
+│   │   ├── skill-relevant/          ← File path → skill recommendations (SR1-SR7)
+│   │   └── _template/               ← Starter for new skills (evidence required)
 │   ├── hooks/                  ← Pre-commit grep-pair verifier (shell script)
-│   └── settings.template.json  ← 4 hook types: PostToolUse/PreToolUse/SessionStart/UserPromptSubmit
+│   └── settings.template.json  ← 6 hooks: PostToolUse × 2 / PreToolUse / SessionStart / UserPromptSubmit × 2
 ├── .agents/
 │   ├── AGENTS.md      ← Trust priority (rules always win on conflict)
 │   ├── active.md      ← Hot-state for next session
 │   └── sessions/      ← Session checkpoints with resume prompts
 └── docs/
-    ├── methodology.md        ← How to write rules that don't drift
+    ├── methodology.md        ← How to write rules that don't drift (6 principles)
+    ├── growth-engine.md      ← The 4 compounding mechanisms — Engines 1-4
     ├── violation-log.md      ← Catalog of past bugs + lessons
-    ├── triangle-rule.md      ← 3-source verification pattern
-    ├── continuous-improvement.md  ← Bug → test + rule + skill cycle
-    ├── capability-expansion.md    ← Rule G + G.2 decision tree (+ /capability-scout skill)
-    └── feedback-loop.md           ← bidirectional learning: project → guardrails
+    ├── starter-violations.md ← 15 universal V-entries to pre-seed new projects
+    ├── triangle-rule.md      ← Universal 3-source verification (any project)
+    ├── research-mode.md      ← Rule G.3 + /research-gap skill philosophy
+    ├── continuous-improvement.md  ← Rule D: bug → test + rule + skill cycle
+    ├── capability-expansion.md    ← Rule G + G.2 decision tree
+    ├── cross-session.md           ← Session handoff protocol (zero drift)
+    └── feedback-loop.md           ← Bidirectional learning: project → guardrails
 ```
 
 ## Install
@@ -143,6 +155,42 @@ and don't repeat old mistakes.
 
 Not just a fix. A fix + test + rule + audit. So the same class of bug
 can't come back silently.
+
+### 5. Research Mode — admit ignorance cheaply, never hallucinate
+
+**The #1 AI failure mode is confident hallucination**: inventing a
+plausible-looking URL / field / method / config based on training-data
+pattern-matching. Code type-checks, tests mock the invention, production
+fails.
+
+Rule G.3 + `/research-gap` flip the incentive:
+
+- Catch phrase: "I think", "probably", "the standard way is",
+  "usually" → that's a gap signal. STOP.
+- Invoke `/research-gap`: 5-tier search (local code → project docs →
+  official docs via WebFetch → WebSearch → MCP/skill registry).
+- If the gap is "capability missing", invoke `/skill-autoinstall` —
+  handles Anthropic-bundled skills, deferred tools, MCP servers, and
+  community skills. Zero-cost installs auto-execute; external-write
+  installs ask for consent.
+
+Result: the agent now has a **scripted path for admitting ignorance**
+that's faster than guessing. Hallucinations become rare by design, not
+by willpower.
+
+### 6. Growth Engine — the compounding loop
+
+Four mechanisms feed each other:
+
+1. **Rule D (learning)** — bug → test + rule + audit invariant
+2. **Rule G.2 (consolidation)** — manual rep ≥ 3 → promote to skill
+3. **Feedback loop (cross-project)** — native learning → bridge file
+   → guardrails template
+4. **Session handoff (continuity)** — checkpoint → next session reads
+   → no context loss
+
+Drop any one → loop breaks. Wire all four → toolkit sharpens every
+session forever. Full diagram + diagnostics in `docs/growth-engine.md`.
 
 ## vs alternatives
 

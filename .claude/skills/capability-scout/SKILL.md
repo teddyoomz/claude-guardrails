@@ -119,12 +119,39 @@ file, running a read-only command. These are Rule G auto-allowed.
 ## CS7 — Default fallback
 
 If CS2-CS6 all miss, the task is genuinely ad-hoc. Recommend:
-- Run once with existing tools (best guess)
+- Run once with existing tools (best guess — but verify per CS8!)
 - Log it (so G.2 can count repetitions later)
 - If it feels heavy → consider asking the user whether to plan further
 
 Return: **"Ad-hoc. Use `<best tool guess>`. If this recurs, promote on
 3rd repetition (Rule G.2)."**
+
+## CS8 — Research + auto-install (Tier 3.5, added v0.3)
+
+**When CS4 says "no existing skill matches" AND the task touches anything
+external** (third-party API, library method, protocol, config schema,
+vendor quirk), don't fall through to CS7. Instead:
+
+1. Invoke `/research-gap` — runs a 5-tier search (local → project docs →
+   official docs via WebFetch → WebSearch → capability registries).
+2. If research reveals "capability exists but isn't loaded", invoke
+   `/skill-autoinstall` — handles 4 install paths (Anthropic bundled,
+   deferred tools via ToolSearch, MCP registry via
+   `mcp__mcp-registry__list_connectors`, community skills via git clone).
+3. Only after research + install path is exhausted → CS7 ad-hoc.
+
+**Why this tier:** CS2-CS6 assume you know the capability landscape.
+Once you hit "I don't know if what I need exists", you've shifted from
+classification to discovery. `/research-gap` + `/skill-autoinstall` is
+the discovery protocol.
+
+**Golden trigger to insert CS8:** if you catch yourself about to write
+"I think the API is..." or "the usual way is..." — STOP. Route through
+CS8 before writing anything.
+
+Return: **"Route through CS8. Invoke `/research-gap` with query: `<gap>`.
+Expect Tier-5 registry hit OR Tier-3 official-docs answer. Then
+`/skill-autoinstall` if install needed, or use verified answer direct."**
 
 ---
 

@@ -3,7 +3,7 @@
     "This is a template. Copy or merge into your .claude/settings.json.",
     "Replace every [FILL-IN] placeholder with project-specific content.",
     "Hooks fire automatically — no manual invocation needed per turn.",
-    "All 4 hook types are generalizable; customize content per your stack.",
+    "Six hook entries total across 4 hook types; customize content per stack.",
     "The additionalContext string is injected into Claude's context before",
     "it responds — use it to reinforce rules that drift in long sessions."
   ],
@@ -16,10 +16,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"additionalContext\": \"[HOOK after Edit/Write] PRE-COMMIT CHECKLIST: (a) [FILL-IN: test command — e.g. npm test -- --run] ALL PASS (b) [FILL-IN: build command — e.g. npm run build] clean — catches Edit silent-fail that tests miss (c) run area audit skill matching files touched (d) GREP-PAIR: every router case has a matching handler def, count must match (e) trace at least one real caller for mutation paths. [EDIT-TOOL SILENT-FAIL TRAP] A parameter typo causes the Edit tool to error silently — always grep the expected text to confirm it landed. See .claude/rules/02-workflow.md for full checklist.\"}'"
+            "command": "echo '{\"additionalContext\": \"[HOOK after Edit/Write] PRE-COMMIT CHECKLIST: (a) [FILL-IN: test command — e.g. npm test -- --run] ALL PASS (b) [FILL-IN: build command — e.g. npm run build] clean — catches Edit silent-fail that tests miss (c) run area audit skill matching files touched — use /skill-relevant to choose (d) GREP-PAIR: every router case has a matching handler def, count must match (e) trace at least one real caller for mutation paths. [EDIT-TOOL SILENT-FAIL TRAP] A parameter typo causes the Edit tool to error silently — always grep the expected text to confirm it landed. See .claude/rules/02-workflow.md for full checklist.\"}'"
           }
         ],
-        "// WHY": "V6 anti-example: agent called Edit with a param typo, function body never landed, claimed committed. Runtime crash in production. This hook injects the pre-commit checklist after every file write so it can not be skipped."
+        "// WHY": "V6 anti-example: agent called Edit with a param typo, function body never landed, claimed committed. Runtime crash in production. This hook injects the pre-commit checklist after every file write so it cannot be skipped."
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\" 2>/dev/null || echo \"\"); if echo \"$CMD\" | grep -qE \"git[[:space:]]+commit\"; then if echo \"$CMD\" | grep -qE \"(fix|bug|bugfix)[:(]\"; then echo \"{\\\"additionalContext\\\": \\\"[D-CYCLE — fix commit detected] Rule D requires 4 artifacts per bug fix, NOT JUST the fix: (1) the code change (done), (2) adversarial test covering the failure class + 3+ nearby edges, (3) new V-entry in .claude/rules/00-session-start.md with YYYY-MM-DD + commit SHA + root cause, (4) new or extended audit-skill invariant to catch recurrence. Missing any of (2-4) = Rule D broken = same class of bug will ship again. If this commit lacks (2-4), plan a follow-up commit BEFORE next feature. Run /audit-health H1 to verify velocity.\\\"}\"; elif echo \"$CMD\" | grep -qE \"(feat|feature)[:(]\"; then echo \"{\\\"additionalContext\\\": \\\"[D-CYCLE — feat commit detected] New features often duplicate existing helpers (Rule of 3) or create orphan collections (no reader). Pre-push checks: (a) grep shared modules first — did you check before writing? (b) any new collection/table has a reader AND writer AND retention policy (C3 lean schema), (c) Triangle Rule applied if replicating external behavior (capture real reference, never guess URL/method), (d) CLAUDE.md index updated if new public files added, (e) did you extract a helper for any pattern now ≥ 3 times (Rule of 3)? Run /audit-anti-vibe-code before push.\\\"}\"; elif echo \"$CMD\" | grep -qE \"refactor[:(]\"; then echo \"{\\\"additionalContext\\\": \\\"[D-CYCLE — refactor commit detected] Refactors are high-risk for subtle regressions because behavior should not change but often does. Verify: (a) /audit-rule-of-3 confirms the refactor actually consolidates (not just moves code), (b) full test suite passed, (c) no test needed to change — if tests DID change, refactor is not behavior-preserving and the scope changed mid-turn (update TodoList per rules/02-workflow.md \\\\\\\"Scope expansion\\\\\\\" section), (d) grep the refactored symbol to confirm all call sites updated.\\\"}\"; elif echo \"$CMD\" | grep -qE \"(perf|performance)[:(]\"; then echo \"{\\\"additionalContext\\\": \\\"[D-CYCLE — perf commit detected] Performance changes often regress correctness. Verify: (a) adversarial tests still pass (perf ≠ correctness), (b) benchmark numbers in commit body (before/after), (c) no caching introduced without invalidation strategy, (d) if React: /audit-react-patterns (memo, useCallback, key props).\\\"}\"; fi; fi; exit 0'",
+            "// WHY": "Rule D (continuous improvement) demands 4 artifacts per bug fix, not 1. Without the hook, agent ships 'fix + push' and forgets the test/V-entry/audit invariant half the time. The hook detects conventional-commit prefix on any git commit and injects the type-specific reminder so the V-log keeps pace with feature velocity. Supports fix, feat, refactor, perf."
+          }
+        ]
       }
     ],
 
@@ -42,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"additionalContext\": \"[MANDATORY FIRST READ: .claude/rules/00-session-start.md — character + expectations + iron-clad rules A-H + past violations V1-Vn + pre-commit checklist. READ BEFORE ANY TOOL CALL.] [IRON-CLAD SUMMARY] A: bug → revert, never patch forward. B: [FILL-IN: deploy safety probe — e.g. probe unauth write paths before + after firestore rules deploy]. C: Rule of 3 / crypto.getRandomValues for tokens / no uid in public docs / no allow:if-true without comment. D: every bug → adversarial test + rule update + audit invariant. E: [FILL-IN: data-boundary rule — e.g. backend UI reads our DB only]. F: Triangle Rule — capture external ref + plan + existing code before writing. G: load deferred tools/skills as needed — rules still apply. H: [FILL-IN: data-ownership rule]. [DEPLOY] Requires explicit THIS-TURN authorization — prior auth does not roll over to next commit or next turn.\"}'"
+            "command": "echo '{\"additionalContext\": \"[MANDATORY FIRST READ: .claude/rules/00-session-start.md — character + expectations + iron-clad rules A-H + past violations V1-Vn + pre-commit checklist. READ BEFORE ANY TOOL CALL.] [IRON-CLAD SUMMARY] A: bug → revert, never patch forward. B: [FILL-IN: deploy safety probe — e.g. probe unauth write paths before + after firestore rules deploy]. C: Rule of 3 / crypto.getRandomValues for tokens / no uid in public docs / no allow:if-true without comment. D: every bug → adversarial test + rule update + audit invariant — use /audit-health to verify velocity. E: [FILL-IN: data-boundary rule — e.g. backend UI reads our DB only]. F: Triangle Rule (UNIVERSAL form — docs/triangle-rule.md) — Evidence + Intention + Existing code before writing; never guess URL/method/field. G: load deferred tools/skills as needed — rules still apply. G.2: same manual pattern ≥ 3 times → promote to skill (/capability-scout). H: [FILL-IN: data-ownership rule]. [DEPLOY] Requires explicit THIS-TURN authorization — prior auth does not roll over to next commit or next turn. [GROWTH ENGINES] The template compounds via 4 engines — docs/growth-engine.md — skip any one and the loop breaks.\"}'"
           }
         ],
         "// WHY": "Without a SessionStart hook, the agent starts cold with no awareness of the iron-clad rules. The hook injects a mandatory-read reminder even if the user forgets to invoke /session-start manually."
@@ -54,10 +64,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"additionalContext\": \"[IRON-CLAD PRE-PROMPT — every turn] A: bug → revert. B: [FILL-IN: deploy safety short form]. C: Rule of 3 / crypto tokens / lean schema / no uid leaks. D: bug → test + rule + audit invariant. E: [FILL-IN: data boundary short form]. F: Triangle — capture before guessing URL/method/field. G: load tools/skills on demand (no ask). Deploy = new explicit ask every turn. Full rules: .claude/rules/00-session-start.md.\"}'"
+            "command": "echo '{\"additionalContext\": \"[IRON-CLAD PRE-PROMPT — every turn] A: bug → revert. B: [FILL-IN: deploy safety short form]. C: Rule of 3 / crypto tokens / lean schema / no uid leaks. D: bug → test + rule + audit invariant. E: [FILL-IN: data boundary short form]. F: Triangle — Evidence + Intention + Existing code before guessing URL/method/field. G: load tools/skills on demand (no ask). G.2: rep ≥ 3 → promote. Deploy = new explicit ask every turn. Full rules: .claude/rules/00-session-start.md. Health dashboard: /audit-health.\"}'"
           }
         ],
-        "// WHY": "Iron-clad rules drift in long conversations. Injecting a summary every prompt keeps the 8 rules in active context without the agent having to re-read the rule files each turn. Pair with rules/00-session-start.md for the full text."
+        "// WHY": "Iron-clad rules drift in long conversations. Injecting a summary every prompt keeps the rules in active context without the agent having to re-read the rule files each turn. Pair with rules/00-session-start.md for the full text."
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); PROMPT=$(echo \"$INPUT\" | jq -r \".prompt // empty\" 2>/dev/null || echo \"\"); RISKS=\"\"; echo \"$PROMPT\" | grep -qiE \"(delete|drop table|truncate|rm -rf|reset --hard|force.push|force-push)\" && RISKS=\"$RISKS destructive\"; echo \"$PROMPT\" | grep -qiE \"(deploy|vercel --prod|firebase deploy|kubectl apply|production|prod)\" && RISKS=\"$RISKS deploy\"; echo \"$PROMPT\" | grep -qiE \"(migrate|migration|schema change|new collection|new table)\" && RISKS=\"$RISKS schema\"; echo \"$PROMPT\" | grep -qiE \"(secret|api.key|credential|password|token)\" && RISKS=\"$RISKS secret\"; echo \"$PROMPT\" | grep -qiE \"(rewrite|refactor all|clean up everything|simplify rules)\" && RISKS=\"$RISKS mass-rewrite\"; if [ -n \"$RISKS\" ]; then echo \"{\\\"additionalContext\\\": \\\"[RISK DETECTED in user prompt:$RISKS] Before acting: DESTRUCTIVE → confirm with user; prefer non-destructive alternative (git revert over force-push; soft delete over DROP). DEPLOY → require explicit THIS-TURN auth; prior auth never rolls over; run Probe-Deploy-Probe if infra rules touched (rule B). SCHEMA → migration plan MUST include fallback removal upfront (methodology AP5); no orphan collection (C3 — reader+writer+retention). SECRET → env vars only; never inline in src/ or api/; rotate immediately if leaked to commit. MASS-REWRITE → Rule-Compression anti-pattern (methodology AP4); never summarize rules — split/expand/reorganize only. Re-read .claude/rules/01-iron-clad.md before acting.\\\"}\"; fi; exit 0'",
+            "// WHY": "User prompts containing high-risk keywords (delete, deploy, drop, secret, rewrite) trigger an extra-attention reminder so the agent surfaces the relevant iron-clad rule and anti-pattern before executing. Pair with the always-on iron-clad summary hook above."
+          }
+        ]
       }
     ]
 

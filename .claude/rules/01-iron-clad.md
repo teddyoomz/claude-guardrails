@@ -156,6 +156,42 @@ invocation — those are auto-allowed.
 
 ---
 
+### G.3. Research Before Guessing
+
+**Companion to G and F.** If you catch yourself about to write "I think",
+"probably", "the standard way", "usually", or "it should be..." about
+any external fact (URL / method / field / config / library behavior) —
+**STOP**. The phrase is a metacognitive flag that you have a knowledge
+gap. Invoke `/research-gap` (which runs a 5-tier search: local code →
+project docs → official docs → WebSearch → MCP/skill registry) and do
+not write until you have a verified answer + source citation.
+
+If research reveals "the capability you need isn't installed", invoke
+`/skill-autoinstall` — it handles Anthropic bundled skills, deferred
+tools, MCP servers, and community skills. Zero-cost installs auto-
+execute under Rule G; installs with external write-surface ask for
+user consent.
+
+**Why:** AI's #1 failure mode is confident hallucination — plausible-
+looking invention that passes type-checks and mocked tests but fails
+in production. Research costs ~30 seconds; a hallucination costs hours
++ a V-entry. Research Mode flips the incentive.
+
+**Anti-example (prevented by this rule):** V-starter-10 — agent writes
+`PATCH /api/users/{id}?action=deactivate` without verifying. Real
+endpoint is `POST /api/users/{id}/deactivate`. 404 in staging. Fix:
+Rule G.3 + `/research-gap`.
+
+**Hard constraint:** G.3 applies even inside another skill. A skill
+invoking an external service without research = same severity as
+writing it by hand.
+
+**Reference:** `docs/research-mode.md`,
+`.claude/skills/research-gap/SKILL.md`,
+`.claude/skills/skill-autoinstall/SKILL.md`.
+
+---
+
 ### G.2. Promotion Trigger — ≥ 3 repetitions = new skill
 
 **Companion to G.** When the agent does the same manual pattern 3+ times in

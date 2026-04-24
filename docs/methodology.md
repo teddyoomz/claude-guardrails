@@ -73,6 +73,28 @@ Every bug triggers a 4-step response:
 The 4th step is what makes the team smarter over time. Without it,
 you fix the same class of bug 10x.
 
+### 6. Every rule cites evidence (or is explicitly preventive)
+
+A rule without evidence is decoration — future sessions can't assess
+whether to keep it, extend it, or delete it.
+
+**Every rule must end in one of two markers:**
+- **`V-example: V{N}`** — references a V-entry in
+  `.claude/rules/00-session-start.md`. The V-entry documents the real
+  bug (date, commit SHA, what went wrong, root cause, fix).
+- **`PRE-SHIP — no real-world bug yet, rule added based on <pattern>`**
+  — marks the rule as preventive. The `<pattern>` cites either a
+  starter V-entry (`docs/starter-violations.md`) or a known class of
+  bug from industry knowledge.
+
+**Why two markers:** reactive rules (from V-entries) and proactive
+rules (from PRE-SHIP analysis) are both valid. But fuzzy rules with no
+marker rot — nobody remembers why they exist, so they eventually get
+deleted when someone "simplifies" (see anti-pattern 4).
+
+**Audit**: `/audit-rules` LR4 greps every rule section for either
+`V[0-9]+` or `PRE-SHIP`. Missing marker = findings.
+
 ---
 
 ## How to write a new rule
@@ -241,7 +263,7 @@ skills to verify the count matches the actual number of migrated entities.
 
 ---
 
-### Anti-pattern 5: Auto-compressed memory
+### Anti-pattern 7: Auto-compressed memory
 
 Using vector DB / AI summary to store project context = drift built-in.
 
@@ -249,6 +271,39 @@ Symptom: after 10 sessions, the "compressed insights" contradict each
 other because no single human reviewed the compression pass.
 
 Fix: plain files, human-curated. If you need search, use grep.
+
+---
+
+### Anti-pattern 8: Guess-over-research (Confident hallucination)
+
+Agent invents a plausible-looking URL / field / method / config based on
+training-data pattern-matching instead of verifying. Code type-checks,
+tests mock the invention, production fails.
+
+Symptom: V-entry "404 at staging because endpoint didn't exist" or
+"function signature wrong despite my 'I think' confidence".
+
+Fix (Rule G.3 + `/research-gap`): treat phrases like "I think X",
+"probably Y", "the standard way is Z" as metacognitive flags that a
+knowledge gap exists. STOP writing. Run the 5-tier research protocol
+(local code → project docs → official docs → WebSearch → capability
+registry). Only write after you have a verified answer + citation.
+
+If research reveals "the capability you need isn't installed", invoke
+`/skill-autoinstall` — zero-cost installs (Anthropic-bundled, deferred
+tools) auto-execute under Rule G; user-consent installs (MCP servers,
+community skills) return a plan for approval.
+
+**V-example:** V-starter-10 in `docs/starter-violations.md` — agent
+wrote `PATCH /api/users/{id}?action=deactivate`; real endpoint was
+`POST /api/users/{id}/deactivate`. Caught by staging, not dev.
+
+**Why "guess-over-research" is tempting:** admitting ignorance feels
+like failure. The default AI loop rewards appearing helpful. Research
+Mode flips the incentive — it gives a scripted path so admitting
+ignorance is the fast path, not the slow one.
+
+Reference: `docs/research-mode.md`.
 
 ---
 

@@ -22,6 +22,16 @@ grep -rnE "pattern-here" src/
 
 **Fix:** [what to do when caught]
 
+**Evidence:** [REQUIRED — one of:]
+- `V-example: V{N}` (YYYY-MM-DD) — citation to the V-entry in
+  `.claude/rules/00-session-start.md` that motivated this invariant
+- `PRE-SHIP — no real-world bug yet, added based on <pattern>`
+  (pattern = starter-violations reference OR known industry class)
+
+A invariant without evidence decays. `/audit-rules` LR4 greps every
+invariant for a `V[0-9]+` citation or `PRE-SHIP` marker — missing
+either = findings.
+
 ## {TOPIC-LETTER}2 — [Next invariant]
 
 ...
@@ -68,7 +78,11 @@ Summary: N findings, X critical. [Block release | OK to ship]
 
 - [ ] Filename: `audit-{kebab-case-topic}/SKILL.md`
 - [ ] Frontmatter has `name` + `description` (description triggers discovery)
-- [ ] Each invariant has: number, name, 1-sentence why, grep pattern, fix
+- [ ] Each invariant has: number, name, 1-sentence why, grep pattern, fix, evidence
+- [ ] **Every invariant cites `V-example: V{N}` OR marks `PRE-SHIP`** (methodology principle 6)
 - [ ] Grep patterns tested against a real project (no false-positive flood)
 - [ ] Skill listed in `/audit-all` at appropriate tier
+- [ ] `/skill-relevant` updated so the skill gets surfaced (path/keyword/commit rules)
 - [ ] README mentions when to run this skill (pre-release, per-PR, weekly)
+- [ ] If the skill researches external knowledge: cross-link `/research-gap`
+- [ ] If the skill can recommend installs: cross-link `/skill-autoinstall`

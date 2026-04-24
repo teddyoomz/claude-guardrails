@@ -23,11 +23,12 @@ tool/skill decision tree, pre-commit checklist.
 - **A. Bug-Blast Revert** — break = revert, never patch forward
 - **B. [YOUR-DEPLOY-SAFETY-RULE]** — e.g. "probe before + after rule deploys"
 - **C. Anti-Vibe-Code** — Rule of 3, crypto tokens, security by default, lean schema
-- **D. Continuous Improvement** — bug → test + rule + audit invariant
+- **D. Continuous Improvement** — bug → test + rule + audit invariant (check `/audit-health`)
 - **E. [YOUR-DATA-BOUNDARY-RULE]** — e.g. "backend reads our DB only"
-- **F. Triangle Rule** — 3 sources before replicating external features
+- **F. Triangle Rule** — Evidence + Intention + Existing code before writing (universal form — any project)
 - **G. Dynamic Capability Expansion** — load tools/skills as needed, rules still apply
 - **G.2. Promotion Trigger** — same manual pattern ≥ 3 times → promote to skill (see `/capability-scout`)
+- **G.3. Research Before Guessing** — "I think / probably / usually" = gap signal → `/research-gap` + `/skill-autoinstall`
 - **H. [YOUR-DATA-OWNERSHIP-RULE]** — e.g. "our data canonical, external = seed only"
 
 ---
@@ -40,11 +41,28 @@ tool/skill decision tree, pre-commit checklist.
 | How to write rules that don't drift | `docs/methodology.md` |
 | Cross-session continuity protocol | `docs/cross-session.md` |
 | Violation log format + examples | `docs/violation-log.md` |
-| Triangle Rule usage | `docs/triangle-rule.md` |
+| Triangle Rule (universal — any project) | `docs/triangle-rule.md` |
 | Continuous Improvement cycle | `docs/continuous-improvement.md` |
 | Capability expansion (Rule G + G.2) | `docs/capability-expansion.md` |
+| Research Mode (Rule G.3 — research before guessing) | `docs/research-mode.md` |
+| Growth Engine (compounding loop of 4 mechanisms) | `docs/growth-engine.md` |
+| Starter V-log (15 universal violations to pre-seed) | `docs/starter-violations.md` |
 | Feedback loop (project → guardrails) | `docs/feedback-loop.md` |
 | {Your project-specific docs} | `docs/{...}` |
+
+**Universal audit/meta skills shipped by the template:**
+
+| Skill | When |
+|---|---|
+| `/audit-anti-vibe-code` | Pre-commit / pre-release |
+| `/audit-rules` | Monthly — lint the rule files themselves |
+| `/audit-health` | Weekly — methodology adoption dashboard |
+| `/audit-all` | Pre-release — wraps Tier-1 audits |
+| `/skill-relevant` | Before every substantive edit — which skill to run |
+| `/capability-scout` | Which tier a task fits (Tier 1-5) |
+| `/research-gap` | When about to guess — 5-tier research |
+| `/skill-autoinstall` | Install missing tool/skill/MCP |
+| `/skill-creator` (anthropic-skills) | Build a new skill from scratch |
 
 ---
 
@@ -120,3 +138,6 @@ After reading, the session should have:
 - Use `crypto.getRandomValues` for tokens, never `Math.random`
 - `new Date().toISOString().slice(0,10)` is UTC — use project timezone helper
 - Every bug → test + rule + audit invariant (Rule D — don't just-fix)
+- Catching yourself write "I think / probably / usually" → STOP, run `/research-gap` (Rule G.3)
+- Same manual pattern 3+ times → promote to skill via `/capability-scout` (Rule G.2)
+- Need capability you don't have → `/skill-autoinstall` (not invent)
