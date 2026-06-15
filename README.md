@@ -62,7 +62,7 @@ your-project/
 
 ```bash
 # Clone + run installer (takes 10 seconds, zero runtime deps)
-git clone https://github.com/YOUR/claude-guardrails
+git clone https://github.com/teddyoomz/claude-guardrails
 cd claude-guardrails
 ./install.sh /path/to/your-project
 ```
