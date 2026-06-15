@@ -29,6 +29,51 @@ When in doubt: STOP and re-read this file. Better to delay than drift.
 
 ---
 
+## 🧭 MASTER FLOW — Skill Orchestration (single source of truth)
+
+**HOW to use skills — one canonical flow.** The orchestration that ties the
+boot chain, audit skills, knowledge tools, and code-style skills together.
+Customize the `[FILL-IN]` gates per project; the STRUCTURE (boot → classify
+tier → tier-calibrated gates → verify → ship → session-end) is the methodology.
+
+### Lifecycle (bookends)
+- **Boot** (every session / `/clear` / compaction): invoke boot skills (e.g.
+  `using-superpowers`) → read mandatory context (this file + handoff/active
+  state) → **📊 graphify read** (if the project has a `graphify-out/`: read
+  `graphify-out/GRAPH_REPORT.md` (god nodes + community structure) +
+  `wiki/index.md` if present → build a codebase mental model **from the graph**
+  before raw-file spelunking — cheaper / faster / clearer = token economy).
+- **Session end**: **📊 `graphify update .`** (if `graphify-out/` — AST-only,
+  no API cost, fast, **NOT a test**) → graph stays synced to this session's
+  edits → next boot reads a fresher graph (🔁 compounding loop). THEN the
+  `session-end` skill (handoff / active.md / checkpoint). Windows: `graphify`
+  may not be on PATH → use `python -m graphify update .`.
+
+### Per task — CLASSIFY the tier first, then fire that tier's gates
+| Tier | Task | Skills (in order) | Gates | Tests |
+|---|---|---|---|---|
+| **T0** trivial | typo · label · comment · 1-line const · doc | — (boot is enough) | — | none (1-liners need no test) |
+| **T1** small fix | regex · single-callsite · 1-file logic fix | `systematic-debugging` (root cause FIRST) | class-of-bug grep (1 instance or a class?) | **targeted-only** (NOT full suite) |
+| **T2** feature | component · endpoint · ≥3 files · refactor · schema | `brainstorming` (design gate) → `writing-plans` → execute → `test-driven-development` | design gate · flow-simulate · class-of-bug · area `/audit-*` · anti-vibe (Rule of 3) | **full suite** |
+| **T3** release | pre-deploy · merge · end-of-batch | `/audit-*` (all) · code-review / finish-branch | pre-commit checklist · `[FILL-IN: rules/migration probes]` · full green | full + **real-environment check** |
+
+- **Verify (real-adversarial)**: user-visible code → prove against the REAL
+  system (real browser / real client SDK / `[FILL-IN]`), never mocks. Active
+  break-attempt mindset — try to BREAK your own code.
+- **Escalate the tier** if scope grows mid-task (a T1 found architectural → T2).
+- **Knowledge ops** (`graphify query` / `path` / `explain` · any wiki) for
+  architecture / cross-module questions — read the graph, don't re-derive.
+- **Ship**: commit + push immediately. Deploy ONLY on explicit user "deploy".
+
+### Precedence (when rules conflict)
+1. User's explicit instruction THIS turn
+2. Project iron-clad rules / CLAUDE.md
+3. This Master Flow + your skills
+4. Code-style skills (e.g. **ponytail** — lazy/minimal code; yields to 1+2)
+5. Default system prompt
+
+---
+
 ## 1. IRON-CLAD RULES (NEVER BREAK)
 
 Full detail in `01-iron-clad.md`. Summary below (one line per rule):

@@ -58,6 +58,16 @@ your-project/
     └── feedback-loop.md           ← Bidirectional learning: project → guardrails
 ```
 
+**🧭 Master Flow** (in `00-session-start.md`) — a single-source skill
+orchestration that classifies every task into a **tier (T0 trivial → T3
+release)** and fires only that tier's gates, so a typo stays a one-liner while
+a feature gets the full design-gate + audits + real-adversarial verification.
+**📊 Graphify lifecycle**: `session-start` reads `graphify-out/GRAPH_REPORT.md`
+to model the codebase *from the graph* (cheaper + clearer than raw files);
+`session-end` runs `graphify update .` to keep it fresh — a compounding loop.
+Optional **🎀 ponytail** code-style layer plugs in at the lowest precedence
+(lazy/minimal code; yields to your rules).
+
 ## Install
 
 ```bash

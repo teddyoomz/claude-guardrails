@@ -31,6 +31,8 @@ tool/skill decision tree, pre-commit checklist.
 - **G.3. Research Before Guessing** — "I think / probably / usually" = gap signal → `/research-gap` + `/skill-autoinstall`
 - **H. [YOUR-DATA-OWNERSHIP-RULE]** — e.g. "our data canonical, external = seed only"
 
+**🧭 Master Flow** (in [`00-session-start.md`](.claude/rules/00-session-start.md)) — the single-source skill orchestration: boot → classify task **tier T0–T3** (trivial / small-fix / feature / release → calibrated gate depth so small work stays fast and big work stays gated) → verify → ship → session-end. **📊 Graphify lifecycle**: read `graphify-out/GRAPH_REPORT.md` at boot (build the codebase model from the graph, not raw files) + `graphify update .` at session-end (keeps it fresh — AST-only, not a test). **🎀 ponytail** (optional global companion) = lazy/minimal code-style; yields to your rules.
+
 ---
 
 ## 🗂️ Docs Index — read on demand

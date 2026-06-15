@@ -24,6 +24,14 @@ Wrap session into 3 files in ≤ 5k tokens.
      run just to fill it. Re-running wastes minutes for a field whose answer is
      already known from earlier in the session.
 
+1.5. **📊 Graphify update (AST-only — NOT a test)** — if the project has a
+   `graphify-out/`, run `graphify update .` (Windows: `python -m graphify update .`).
+   AST-only → no API cost, no LLM call, fast → keeps the graph synced to this
+   session's code edits so the NEXT boot reads a fresh graph (🔁 compounding
+   loop). This is **NOT a test** — the no-tests directive above does NOT apply.
+   Skip if no `graphify-out/`. (Master Flow session-end step — see
+   `.claude/rules/00-session-start.md` § 🧭 MASTER FLOW.)
+
 2. **Edit `.agents/active.md`** (Write OK — small file):
    - Frontmatter: updated_at, status, branch, last_commit, tests, deploy_state
    - Body — 4 sections only: `## State` (3 bullets), `## What this session shipped` (≤ 8 bullets, link to checkpoint), `## Next action`, `## Outstanding user-triggered actions`
