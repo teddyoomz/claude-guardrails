@@ -1,0 +1,21 @@
+feat(rules): port 3 more LoverClinic core rules — P (class-of-bug), T (atomic RMW), M (data ops)
+
+Completes the backlog batch after Rule Q + count-cap handoff (12478ab).
+All generic / stack-agnostic.
+
+- 01-iron-clad.md: NEW core rules P, T, M (added to the keep-list A,C,D,F,G,P,Q,T,M):
+  - P. Class-of-Bug Expansion — fix the class not the instance; grep all siblings
+    before commit + lock with a regression test (pairs with D).
+  - T. Atomic Read-Modify-Write — any concurrently-mutated record (balance/counter/
+    inventory/array/status) needs a transaction/CAS; a plain read-then-write loses an
+    update under a double-click; verify with a REAL concurrent test.
+  - M. Data Ops are Scripts — prod migrate/backfill/cleanup = two-phase (dry-run →
+    --apply), idempotent, audited, forensic-stamped; never deploy-coupled / console.
+- docs/methodology.md: principle 5 (Continuous Improvement) expanded 4 → 5 steps
+  (root-cause first + class-of-bug grep).
+- docs/starter-violations.md: V-starter-18 (instance-only fix), V-starter-19
+  (concurrent RMW lost update), V-starter-20 (deploy-coupled / unaudited migration);
+  count 17 → 20.
+- CLAUDE.md: P/T/M in iron-clad summary + Common Pitfalls.
+- NEW .claude/scripts/_template-data-op.mjs — generic two-phase data-op template
+  (dry-run/apply + idempotent + audit + forensic + invocation guard). Syntax verified.

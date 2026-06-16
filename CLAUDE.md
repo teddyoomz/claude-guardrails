@@ -25,12 +25,15 @@ tool/skill decision tree, pre-commit checklist.
 - **C. Anti-Vibe-Code** — Rule of 3, crypto tokens, security by default, lean schema
 - **D. Continuous Improvement** — bug → test + rule + audit invariant (check `/audit-health`)
 - **Q. Real-Adversarial Verification** — mock tests ≠ verification; before "verified", drive the REAL system (L1 real interface / L2 real client, not an admin path) with a break-attempt mindset
+- **P. Class-of-Bug Expansion** — fix the class, not the instance; grep all siblings before commit + lock with a regression test (pairs with D)
+- **T. Atomic Read-Modify-Write** — any concurrently-mutated record (balance/counter/inventory/array/status) needs a transaction/CAS; a plain read-then-write loses an update under a double-click
 - **E. [YOUR-DATA-BOUNDARY-RULE]** — e.g. "backend reads our DB only"
 - **F. Triangle Rule** — Evidence + Intention + Existing code before writing (universal form — any project)
 - **G. Dynamic Capability Expansion** — load tools/skills as needed, rules still apply
 - **G.2. Promotion Trigger** — same manual pattern ≥ 3 times → promote to skill (see `/capability-scout`)
 - **G.3. Research Before Guessing** — "I think / probably / usually" = gap signal → `/research-gap` + `/skill-autoinstall`
 - **H. [YOUR-DATA-OWNERSHIP-RULE]** — e.g. "our data canonical, external = seed only"
+- **M. Data Ops are Scripts** — prod migrate/backfill/cleanup = a two-phase script (dry-run → `--apply`), idempotent, audited, forensic-stamped; never deploy-coupled or console-hand-edited (start from `.claude/scripts/_template-data-op.mjs`)
 
 **🧭 Master Flow** (in [`00-session-start.md`](.claude/rules/00-session-start.md)) — the single-source skill orchestration: boot → classify task **tier T0–T3** (trivial / small-fix / feature / release → calibrated gate depth so small work stays fast and big work stays gated) → verify → ship → session-end. **📊 Graphify lifecycle**: read `graphify-out/GRAPH_REPORT.md` at boot (build the codebase model from the graph, not raw files) + `graphify update .` at session-end (keeps it fresh — AST-only, not a test). **🎀 ponytail** (optional global companion) = lazy/minimal code-style; yields to your rules.
 
@@ -142,6 +145,9 @@ After reading, the session should have:
 - `new Date().toISOString().slice(0,10)` is UTC — use project timezone helper
 - Every bug → test + rule + audit invariant (Rule D — don't just-fix)
 - Never claim "verified/done" for user-visible code from mocks/admin-path alone → drive the REAL system (Rule Q)
+- Fixed a bug? Grep the whole project for the same pattern BEFORE commit — fix the class, not the instance (Rule P)
+- Concurrently-mutated record (balance/counter/inventory) → transaction/CAS, never plain read-then-write (Rule T)
+- Prod data migrate/backfill/cleanup = two-phase script (dry-run → `--apply`), idempotent + audited — never in app startup or a console (Rule M)
 - Keep `SESSION_HANDOFF.md` to the newest 10 sessions — trim overflow to the archive every session-end (count cap, not byte cap)
 - Catching yourself write "I think / probably / usually" → STOP, run `/research-gap` (Rule G.3)
 - Same manual pattern 3+ times → promote to skill via `/capability-scout` (Rule G.2)

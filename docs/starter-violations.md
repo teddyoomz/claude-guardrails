@@ -1,5 +1,5 @@
 ---
-title: Starter V-log — 17 universal violations to pre-seed your project
+title: Starter V-log — 20 universal violations to pre-seed your project
 audience: projects installing claude-guardrails for the first time
 purpose: Rule D (Continuous Improvement) has teeth even on day 1, because the catalog isn't empty.
 ---
@@ -10,7 +10,7 @@ When a project first installs claude-guardrails, the V-log in
 `.claude/rules/00-session-start.md` is empty. Empty catalogs let AI make
 every mistake at least once.
 
-This file pre-seeds **17 violations that happen to almost every project
+This file pre-seeds **20 violations that happen to almost every project
 eventually**. Copy the ones relevant to your stack into your project's
 V-log. Each entry is a placeholder — you'll replace the fake
 date/commit SHA with your own when the violation actually happens (or
@@ -402,6 +402,83 @@ enough — retest at a higher level.
 
 **Rule motivated**: Q (Real-Adversarial Verification). PRE-SHIP — applies to any
 project where tests can mock the system boundary (almost all of them).
+
+---
+
+## V-starter-18 — Fixed the one instance; the sibling broke next session
+
+**What happened**: A bug was found and fixed in the file in front of the agent.
+Tests went green, shipped. A week later "the same bug" was reported — a different
+file had the identical broken pattern that the first fix never touched. This
+repeated several rounds, each fixing only that round's instance, before someone
+grepped the whole project and found all five at once.
+
+**Root cause**: the fix scope was the surfaced instance, not the class-of-bug. The
+same pattern (a shape change that broke a sibling reader, a race, a two-call-site
+fix that missed the twin) usually exists in 3-5 places. The un-fixed siblings
+aren't "not broken yet" — they're latent.
+
+**Fix (Rule P)**: the moment you fix a bug, before committing: name the class →
+cross-file grep for every instance of that pattern → fix them all in one batch →
+add a source-grep regression test + a numbered audit invariant. If the grep returns
+more than one hit, your fix scope is all of them.
+
+**Class**: "instance-only fix (no class-of-bug expansion)"
+
+**Rule motivated**: P (Class-of-Bug Expansion) + D. PRE-SHIP — applies whenever a
+copy-pasted or systemic pattern can recur across files.
+
+---
+
+## V-starter-19 — Concurrent read-modify-write lost an update (double-click / two actors)
+
+**What happened**: Two requests modified the same record at almost the same time (a
+user double-clicked "submit", or two staff acted on the same row). Each did
+`read → modify → write` without a transaction: both read the same starting value,
+both wrote, last-write-wins. One update — a payment, a stock deduction, a points
+change — silently vanished. No error was thrown. The bug never reproduced in
+single-actor testing.
+
+**Root cause**: a plain read-then-write on a record that more than one flow can
+mutate is not concurrency-safe. The two writers race; the loser's change is
+overwritten.
+
+**Fix (Rule T)**: make the read-modify-write atomic — a database transaction
+(read + write inside it; the loser retries against the fresh value), an atomic
+increment / compare-and-swap, or optimistic-concurrency version check with retry.
+For a multi-record allocation, re-verify inside the transaction and re-plan on
+contention. Verify with a REAL concurrent test (fire both writers at once, assert
+no-lost-update) — a mock can't expose a race.
+
+**Class**: "non-atomic concurrent RMW (lost update)"
+
+**Rule motivated**: T (Atomic Read-Modify-Write). PRE-SHIP — DB-agnostic; applies to
+any balance / counter / inventory / shared-array / status field.
+
+---
+
+## V-starter-20 — Production data migration coupled to a deploy (or hand-edited in a console)
+
+**What happened**: A one-off data fix was either (a) bolted into app startup
+("on next load, if field X is missing, backfill it") — so it shipped with a deploy,
+re-ran on every boot, and was hard to roll back; or (b) done by hand in a database
+console — leaving no audit trail, no dry-run, and no re-run safety. In one case the
+migration logic had a bug that only surfaced at write time, and because it was
+deploy-coupled, fixing it meant a whole new deploy cycle.
+
+**Root cause**: a data manipulation was treated as shipped code (or as a manual
+console action) instead of a two-phase script.
+
+**Fix (Rule M)**: make it a script run from a trusted local/admin context — two-phase
+(dry-run by default; writes only behind `--apply`), idempotent (re-apply = 0 writes),
+with an audit record (scanned / changed / skipped + before/after) and forensic
+fields (prior value + a `*MigratedAt` marker) on every mutated row. Dry-run first,
+sanity-check the counts, then apply. Never hand-edit prod data in a console.
+
+**Class**: "deploy-coupled / unaudited data migration"
+
+**Rule motivated**: M (Data Ops are Scripts). PRE-SHIP — applies to any project that
+ever mutates production data. Start from `.claude/scripts/_template-data-op.mjs`.
 
 ---
 

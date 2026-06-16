@@ -63,15 +63,19 @@ nothing. Humans preserve literal text; AI erodes it.
 
 ### 5. Continuous Improvement (Rule D)
 
-Every bug triggers a 4-step response:
+Every bug triggers a 5-step response:
 
-1. **Fix the code** — make the failing test pass
-2. **Add adversarial test** — 5+ nasty inputs, not just the one that bit
-3. **Update rule file** — if the bug class wasn't already covered
-4. **Add audit invariant** — numbered grep pattern in the relevant skill
+1. **Root cause first** — understand WHY before you touch anything
+2. **Expand to the class (Rule P)** — grep the whole project for the SAME
+   pattern; the fix scope is every instance, not just the one that bit
+3. **Fix all + add an adversarial test** — 5+ nasty inputs, not just the
+   one input that surfaced it
+4. **Update rule file** — if the bug class wasn't already covered
+5. **Add audit invariant** — numbered grep pattern in the relevant skill
 
-The 4th step is what makes the team smarter over time. Without it,
-you fix the same class of bug 10x.
+Steps 2 + 5 are what make the team smarter over time. Without step 2 you fix
+the same class of bug 10x (the surfaced instance this week, its sibling next
+week); without step 5 the pattern silently returns. See iron-clad Rule P.
 
 ### 6. Every rule cites evidence (or is explicitly preventive)
 

@@ -5,10 +5,10 @@ These are the rules that, if broken, produce a session-ending mistake. Every
 rule has a **name**, a **why** (often an anti-example linking to a V-entry
 in `00-session-start.md`), and a **grep target** so audits can enforce it.
 
-**How to use this template:** Keep rules A, C, D, F, G, **Q** exactly as written —
-they're the universally-applicable core. Customize B, E, H for your project.
-Add new rules (I, J, ...) whenever a new class of bug demands it. (Rule Q keeps
-its distinctive letter — it does not collide with the `V`-number violation log.)
+**How to use this template:** Keep the universal core — **A, C, D, F, G, P, Q, T, M**
+— exactly as written. Customize B, E, H for your project. Add new rules (I, J, ...)
+whenever a new class of bug demands it. (P/Q/T/M keep their distinctive letters from
+the source project — they don't collide with the `V`-number violation log.)
 
 ---
 
@@ -148,6 +148,65 @@ regression test + an audit invariant.
 boundary. Audit cue: grep for "verified"/"done" claims in session notes that lack
 L1/L2 evidence. See `docs/starter-violations.md` V-starter-17 (mock-shadowed
 verification) and methodology anti-pattern 9.
+
+---
+
+### P. Class-of-Bug Expansion — fix the class, not the instance
+
+**Companion to D.** When a bug surfaces (a red test, a user report, something you
+notice), do NOT fix only the one instance and move on. Before claiming it fixed:
+
+1. **Root cause first** — understand WHY it broke (never patch before you can name
+   the cause).
+2. **Classify the class** — name the pattern ("read-then-write race", "shape change
+   broke a sibling reader", "one call-site fixed, the twin missed").
+3. **Grep the whole project** for every instance of that pattern — not just the file
+   in front of you.
+4. **Fix them all in one batch** — the surfaced instance plus every sibling.
+5. **Lock it** — a source-grep regression test that fails if the pattern returns, a
+   numbered audit invariant, and (if the class spans subsystems) a new iron-clad rule.
+
+**Why:** the same broken pattern usually exists in 3-5 other places. Fixing only the
+one that bit you leaves the rest as latent bugs that resurface session after session
+as "the same bug again". One project burned seven rounds on a single class because
+each round fixed only that round's instance. Sibling instances aren't "not broken
+yet" — they're undetonated.
+
+**How to follow:** the moment you fix a bug, run the cross-file grep for its pattern
+before you commit. If the grep returns > 1 hit, your fix scope is all of them.
+
+**Enforcement:** PRE-SHIP — pairs with Rule D and the systematic-debugging discipline.
+See `docs/starter-violations.md` V-starter-18.
+
+---
+
+### T. Atomic Read-Modify-Write under concurrency
+
+Any **read-modify-write** of a record that more than one flow can mutate concurrently
+— a balance, a counter, an inventory cell, an array on a shared document, a status
+field — MUST be atomic. A plain `read → modify → write` (`getDoc` then `update`, or
+`SELECT` then `UPDATE` outside a transaction) silently **loses one writer** under a
+double-click or two simultaneous actors: both read the same starting value, the last
+write wins, and one update (a payment, a deduction, a use) vanishes with no error.
+
+**Use the right primitive:**
+- Single record → a database **transaction** (read + write inside it; the loser
+  retries against the fresh value), or an atomic increment/compare-and-swap, or an
+  optimistic-concurrency version check with retry.
+- Multi-record / set-read (e.g. allocate across several rows) → re-verify inside the
+  transaction AND, on a contention error, **re-fetch + re-plan** (bounded retry) —
+  don't let a stale-plan guard fail the user's action.
+
+**Verify with a REAL concurrent test (Rule Q):** fire the two writers at once
+(`Promise.allSettled` / parallel processes) against a real environment and assert
+conservation / no-lost-update. A mock can't expose a race.
+
+**Why:** "it worked when I clicked once" is not concurrency-safe. The bug is invisible
+to single-actor tests and only appears in production under a double-click or two
+users — exactly where lost money / lost inventory is most expensive.
+
+**Enforcement:** PRE-SHIP — DB-agnostic (transactions exist in every serious store).
+See `docs/starter-violations.md` V-starter-19.
 
 ---
 
@@ -300,6 +359,41 @@ Customize for your architecture:
 - SaaS integrating with 3rd-party CRM: ours canonical, theirs = sync mirror
 - E-commerce with inventory sync: master stock in OUR system, feed out to channels
 - Content app with external API: cache + enrich, canonical is ours
+
+---
+
+### M. Data Ops are Scripts — two-phase, idempotent, audited (never deploy-coupled)
+
+A one-off production **data manipulation** — migrate / backfill / bulk-update /
+cleanup / reclassify / counter-reset — is a **script you run**, not code you ship.
+
+Required shape:
+1. **It's a script**, run from a trusted local/admin context against prod — NOT bolted
+   into app startup ("fix it on next page-load if X is missing"). Startup-coupled
+   migrations are deploy-coupled, race-prone, and re-run on every boot.
+2. **Two-phase**: defaults to **dry-run** (report what it WOULD change); commits writes
+   only behind an explicit `--apply` flag. Always dry-run first; sanity-check the
+   counts; only then apply.
+3. **Idempotent**: re-running with `--apply` yields **0 writes** (skip rows already
+   migrated). Build the skip check in.
+4. **Audited**: write an audit record (scanned / changed / skipped + before/after
+   distribution + timestamp) to a durable location.
+5. **Forensic trail**: when mutating existing rows, stamp the prior value + a
+   `*MigratedAt` marker so the change is traceable and reversible.
+6. **Never hand-edit prod in a console** — no audit trail, no re-run safety.
+
+**Why:** data ops bolted into shipped code couple a data fix to a deploy cycle (slow
+iteration, hard rollback) and often re-trigger on every load. A two-phase script runs
+locally in seconds, its dry-run catches mistakes before any write, and the audit doc +
+forensic fields make it reversible. (One project caught two latent migration bugs in
+the dry-run, fixed them in minutes, and applied cleanly — because it wasn't deploy-coupled.)
+
+**How to follow:** start from `.claude/scripts/_template-data-op.mjs`. Dry-run, read the
+report, then `--apply`. Exceptions: schema/permission changes that genuinely require a
+deploy go through Rule B (probe-deploy-probe), not this path.
+
+**Enforcement:** PRE-SHIP — applies to any project that ever mutates production data.
+See `docs/starter-violations.md` V-starter-20.
 
 ---
 
