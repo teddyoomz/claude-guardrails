@@ -26,3 +26,7 @@ build/
 # Logs
 logs/
 *.log
+
+# Temp commit-message files (commit via -F then delete)
+.commit-msg.tmp
+*.tmp
