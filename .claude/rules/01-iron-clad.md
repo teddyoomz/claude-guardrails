@@ -5,9 +5,10 @@ These are the rules that, if broken, produce a session-ending mistake. Every
 rule has a **name**, a **why** (often an anti-example linking to a V-entry
 in `00-session-start.md`), and a **grep target** so audits can enforce it.
 
-**How to use this template:** Keep rules A, C, D, F, G exactly as written —
+**How to use this template:** Keep rules A, C, D, F, G, **Q** exactly as written —
 they're the universally-applicable core. Customize B, E, H for your project.
-Add new rules (I, J, ...) whenever a new class of bug demands it.
+Add new rules (I, J, ...) whenever a new class of bug demands it. (Rule Q keeps
+its distinctive letter — it does not collide with the `V`-number violation log.)
 
 ---
 
@@ -91,6 +92,62 @@ parent doc as array if possible.
 
 **Why:** This is the engine of memory growth. Without D, your rules go stale.
 With D, every session makes the rule set sharper.
+
+---
+
+### Q. Real-Adversarial Verification — mock tests are NOT verification
+
+Before claiming **"verified" / "done" / "tests pass" / "ready to ship/deploy"**
+for ANY user-visible code (UI, an API endpoint behind auth, a real query, a
+cross-system flow), you MUST exercise the **real system**, not a mock. Passing
+unit tests + a clean build are **necessary but not sufficient** — they cover the
+*shape* of the code, not its *behavior* against the real environment.
+
+Satisfy at least one level:
+
+- **L1 (preferred)** — drive the REAL deployed interface (real browser / real
+  CLI / real device) with real auth, and assert the real result (real DOM, real
+  side-effect, real response).
+- **L2 (acceptable)** — use the REAL client (NOT a privileged/admin path that
+  bypasses the system's own permission + index + validation layers) issuing the
+  EXACT queries/calls the app issues, against a real environment.
+- **L3 (last resort)** — the user confirms in writing ("tried it, works" / "tried
+  it, broke at X"). Only when L1 and L2 are genuinely infeasible.
+
+**FORBIDDEN** (each = a Rule Q violation):
+- Mocking the system boundary (DB/query/network) and calling the result "verified".
+- An admin/privileged-SDK call standing in for the real client — it can bypass the
+  exact indexes, rules, and auth that break the real user, so it passes while prod
+  fails.
+- "All unit tests pass + build clean → shipped" for a user-visible flow.
+- A post-deploy "probe" that doesn't exercise the actual user flow.
+- "I tested for 5 minutes and found nothing" — < 5 min + 0 bugs means you didn't
+  try; retest at a higher level with a break-attempt mindset.
+- Reasoning your way to "verified" ("it's identical to the proven path") instead of
+  running a test that could actually FAIL. Certainty is exactly when self-deception
+  ships bugs — run the real test anyway, and disclose the gap between what you
+  *tested* and what you *reasoned about*.
+
+**Self-check before any "verified" claim** (any "no" / "not sure" → DO NOT CLAIM):
+1. Did I drive the REAL interface OR the REAL client?
+2. Did I issue the EXACT call/query the app issues?
+3. Did I actively TRY to BREAK my own code?
+4. If < 5 min testing + 0 bugs → did I retest harder?
+5. Can I produce a log / screenshot proving the flow?
+
+**Why:** the highest-cost AI failure mode is a green test suite that lies — every
+mocked layer agreeing with the bug. The cost is not a bad test; it is shipped
+breakage plus collapsed trust. Real + adversarial (both words matter: the *real*
+system, tried *adversarially*) is the only verification that doesn't lie.
+
+**How to follow:** keep mock/unit tests for fast code-shape coverage, but gate every
+"verified" claim on L1 or L2 evidence. Pair with Rule D: a confirmed bug becomes a
+regression test + an audit invariant.
+
+**Enforcement:** PRE-SHIP — applies to any project where tests can mock the system
+boundary. Audit cue: grep for "verified"/"done" claims in session notes that lack
+L1/L2 evidence. See `docs/starter-violations.md` V-starter-17 (mock-shadowed
+verification) and methodology anti-pattern 9.
 
 ---
 

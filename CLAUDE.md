@@ -24,6 +24,7 @@ tool/skill decision tree, pre-commit checklist.
 - **B. [YOUR-DEPLOY-SAFETY-RULE]** — e.g. "probe before + after rule deploys"
 - **C. Anti-Vibe-Code** — Rule of 3, crypto tokens, security by default, lean schema
 - **D. Continuous Improvement** — bug → test + rule + audit invariant (check `/audit-health`)
+- **Q. Real-Adversarial Verification** — mock tests ≠ verification; before "verified", drive the REAL system (L1 real interface / L2 real client, not an admin path) with a break-attempt mindset
 - **E. [YOUR-DATA-BOUNDARY-RULE]** — e.g. "backend reads our DB only"
 - **F. Triangle Rule** — Evidence + Intention + Existing code before writing (universal form — any project)
 - **G. Dynamic Capability Expansion** — load tools/skills as needed, rules still apply
@@ -140,6 +141,8 @@ After reading, the session should have:
 - Use `crypto.getRandomValues` for tokens, never `Math.random`
 - `new Date().toISOString().slice(0,10)` is UTC — use project timezone helper
 - Every bug → test + rule + audit invariant (Rule D — don't just-fix)
+- Never claim "verified/done" for user-visible code from mocks/admin-path alone → drive the REAL system (Rule Q)
+- Keep `SESSION_HANDOFF.md` to the newest 10 sessions — trim overflow to the archive every session-end (count cap, not byte cap)
 - Catching yourself write "I think / probably / usually" → STOP, run `/research-gap` (Rule G.3)
 - Same manual pattern 3+ times → promote to skill via `/capability-scout` (Rule G.2)
 - Need capability you don't have → `/skill-autoinstall` (not invent)

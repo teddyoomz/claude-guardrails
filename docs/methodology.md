@@ -307,6 +307,49 @@ Reference: `docs/research-mode.md`.
 
 ---
 
+### Anti-pattern 9: Mock tests mistaken for verification
+
+Agent runs the unit suite + source-grep checks + a build, all green, and claims
+"verified / done / ready to ship". In production it's broken on first real use.
+Every green layer tested the *shape* of the code against mocks — the system
+boundary (DB / query / network / auth) was stubbed, or a privileged/admin path
+stood in for the real client and bypassed the very indexes, rules, and permissions
+the real user hits.
+
+Symptom: V-entry "shipped after a green suite; broke immediately in prod" — the
+tests all agreed with the bug because they all mocked the same boundary.
+
+```
+# Looks verified — but every layer is shape-only
+unit tests (DB mocked) ........ PASS
+source-grep (code shape) ...... PASS
+build ......................... clean
+→ "verified, shipping"        ← FALSE. Nothing touched the real system.
+```
+
+Fix (Rule Q — Real-Adversarial Verification): mock tests are code-shape coverage,
+NOT behavior verification. Before any "verified" claim on user-visible code,
+exercise the REAL system — **L1** drive the real deployed interface with real auth,
+or **L2** use the real client (not an admin/privileged path) issuing the exact
+calls the app issues, against a real environment. Default to a break-attempt
+mindset; "found nothing in 5 minutes" means test harder, not "done". Never reason
+your way to "verified" when a test that could actually fail was available — and
+when you do reason rather than run, disclose that gap out loud.
+
+**Why "tests pass → shipped" is tempting:** a green suite *feels* like proof and is
+the cheap, fast path. But a privileged/admin SDK call bypasses the real index +
+rule + auth layers, so it passes while the real client fails — the suite's green is
+the loudest lie. Real + adversarial is the only signal that doesn't.
+
+**V-example:** `docs/starter-violations.md` V-starter-17 — a feature shipped on a
+green unit suite + admin-path "e2e" + a trivial post-deploy probe; the real client,
+subject to the real permission + index layer, was broken in several user-visible
+ways on first use.
+
+Reference: iron-clad Rule Q (`.claude/rules/01-iron-clad.md`).
+
+---
+
 ## How to grow this methodology
 
 This file itself should grow. When you discover a new anti-pattern or a

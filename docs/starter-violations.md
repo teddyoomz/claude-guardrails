@@ -1,5 +1,5 @@
 ---
-title: Starter V-log — 15 universal violations to pre-seed your project
+title: Starter V-log — 17 universal violations to pre-seed your project
 audience: projects installing claude-guardrails for the first time
 purpose: Rule D (Continuous Improvement) has teeth even on day 1, because the catalog isn't empty.
 ---
@@ -10,7 +10,7 @@ When a project first installs claude-guardrails, the V-log in
 `.claude/rules/00-session-start.md` is empty. Empty catalogs let AI make
 every mistake at least once.
 
-This file pre-seeds **15 violations that happen to almost every project
+This file pre-seeds **17 violations that happen to almost every project
 eventually**. Copy the ones relevant to your stack into your project's
 V-log. Each entry is a placeholder — you'll replace the fake
 date/commit SHA with your own when the violation actually happens (or
@@ -335,6 +335,73 @@ function), build the mask from the payload keys:
 **Rule motivated**: PRE-SHIP (stack-specific; applies to any REST
 PATCH that has replace-vs-merge semantics — Firestore, DynamoDB,
 Mongo, etc.).
+
+---
+
+## V-starter-16 — Cross-session handoff file grew unbounded (append-only accumulator)
+
+**What happened**: `SESSION_HANDOFF.md` (read at the start of EVERY session)
+kept growing — session-end only ever *appended* a new `### Session` block (and,
+in some projects, a per-session one-line status bullet) and never removed
+anything. It reached 20+ blocks / tens of thousands of tokens. Every future
+session paid that token cost at boot for context it almost never needed. In one
+case the file even exceeded the Read-tool size limit, so boot couldn't load it
+at all.
+
+**Root cause**: the maintenance policy was **byte-triggered** ("archive when the
+file is > 180 KB") or absent entirely. A byte trigger is the wrong tool — the
+file can hold dozens of sessions while still sitting *under* the threshold, so it
+never fires and the file silently bloats. The session-end skill also said "NEVER
+rewrite older sessions", which (mis)read as "never touch them" → never trim.
+
+**Fix**: cap by **COUNT, every turn** — keep only the newest N (10 is a good
+default) `### Session` blocks + N per-session Current State bullets in the live
+file; move the overflow to a cold archive
+(`.agents/sessions/session-handoff-archive.md`) that is **never read at boot**.
+Per-session detail also lives in checkpoints + `docs/violation-log.md`, so the
+live file loses nothing. Make the trim idempotent and run it on every
+`/session-end` (canonical trimmer:
+`.claude/scripts/trim-session-handoff.mjs`). "Frozen older sessions" means
+*never edited in place* — archiving the overflow is trimming, not rewriting.
+
+**Class**: "append-only accumulator with no count cap"
+
+**Rule motivated**: cross-session protocol (`docs/cross-session.md` — bound the
+handoff by count) + session-end skill HARD CAP. PRE-SHIP — applies to any file
+an agent appends to every turn AND re-reads every boot (handoff, running notes,
+a "decisions" log, a changelog the agent loads).
+
+---
+
+## V-starter-17 — Mock/stub tests mistaken for real verification
+
+**What happened**: A feature shipped after the unit suite, source-grep checks,
+and a build all went green — the agent claimed "verified / done". In production
+it was broken in several user-visible ways on the first real use. Every green
+layer had tested the *shape* of the code against mocks, not the real system: the
+DB/query layer was stubbed, the client used a privileged/admin path that bypassed
+the real permission + index layer, and the "post-deploy probe" was a trivial
+request that never exercised the actual user flow.
+
+**Root cause**: mock tests are **code-shape coverage, not behavior verification**.
+A privileged/admin SDK call can bypass the very indexes, rules, and auth the real
+client is subject to — so an admin-path test passes while the real client fails.
+"Tests pass + build clean" is necessary but **not sufficient** for any
+user-visible flow.
+
+**Fix (real-adversarial verification — see iron-clad Rule Q)**: before claiming
+"verified" for user-visible code, satisfy at least one: **L1** — drive the REAL
+deployed interface (real browser / real CLI) with real auth and assert the real
+result; **L2** — use the REAL client (not an admin/privileged path) issuing the
+EXACT queries the app issues against a real environment; **L3 (last resort)** —
+the user confirms in writing. Default to a break-attempt mindset: assume you're
+wrong somewhere and go find it. Found 0 bugs in < 5 minutes? You didn't test hard
+enough — retest at a higher level.
+
+**Class**: "mock-shadowed verification"
+
+**Rule motivated**: Q (Real-Adversarial Verification). PRE-SHIP — applies to any
+project where tests can mock the system boundary (almost all of them).
 
 ---
 

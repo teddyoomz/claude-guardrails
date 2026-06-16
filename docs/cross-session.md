@@ -135,6 +135,10 @@ your SESSION_HANDOFF.md is not.
 Check at the end of every session:
 
 - [ ] `SESSION_HANDOFF.md` updated with current state + next action + resume prompt
+- [ ] `SESSION_HANDOFF.md` **trimmed to the newest 10 sessions + 10 Current State
+      bullets** — overflow moved to `.agents/sessions/session-handoff-archive.md`
+      (COUNT cap, every turn — not "when it gets big"). The handoff file is read at
+      EVERY boot; an unbounded one taxes every future session with dead tokens.
 - [ ] `.agents/active.md` updated with hot state
 - [ ] If major milestone: new `.agents/sessions/YYYY-MM-DD-<slug>.md` checkpoint
 - [ ] If any rule was violated: V-entry added to `00-session-start.md`
@@ -142,6 +146,24 @@ Check at the end of every session:
       explicit "read X before any tool call" execution)
 
 If any of these are skipped, drift is beginning.
+
+### Bound the handoff file by COUNT, never by size
+
+The handoff file is an **append-only accumulator** by default — session-end keeps
+adding a block + a bullet and never removes anything. Left alone it grows without
+limit, and since it's read at the start of *every* session, the cost compounds.
+
+The fix is a **count cap enforced every turn**: keep the newest N sessions (10 is a
+good default) + N Current State bullets in the live file; move everything older to a
+cold archive (`.agents/sessions/session-handoff-archive.md`) that is **never read at
+boot**. Per-session detail also lives in checkpoints + the violation log, so trimming
+the live file loses nothing.
+
+A **byte cap is the wrong tool** ("archive when > 180 KB"): the file can hold dozens
+of sessions — tens of thousands of boot tokens — while still under the byte trigger,
+so it never fires and every session silently overpays. Count, don't weigh.
+(See `docs/starter-violations.md` V-starter-16 and the trimmer at
+`.claude/scripts/trim-session-handoff.mjs`.)
 
 ## How to recover from drift
 

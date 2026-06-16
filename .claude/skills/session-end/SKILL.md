@@ -9,7 +9,7 @@ Wrap session into 3 files in ≤ 5k tokens.
 
 ## Hard caps (BLOCKING — exceed = redo)
 - `.agents/active.md` ≤ 50 lines (frontmatter + 5-bullet body + next-action)
-- `SESSION_HANDOFF.md`: edit ONLY `## Current State` + insert ONE new entry (≤ 30 lines) + replace Resume Prompt block. NEVER rewrite older sessions.
+- `SESSION_HANDOFF.md`: edit ONLY `## Current State` + insert ONE new entry (≤ 30 lines) + replace Resume Prompt block. NEVER edit older session blocks in place. **HARD CAP = keep ≤ 10 `### Session` blocks + ≤ 10 Current State bullets; archive the overflow EVERY turn (COUNT cap, not byte cap).**
 - Checkpoint `.agents/sessions/YYYY-MM-DD-<slug>.md` ≤ 200 lines. Long lessons → link to `docs/violation-log.md`.
 
 ## Steps
@@ -41,7 +41,8 @@ Wrap session into 3 files in ≤ 5k tokens.
    - Edit `## Current State` block (deploy state, last commit, tests)
    - Insert new `### Session YYYY-MM-DD ...` block above prior entry (≤ 30 lines, link to checkpoint)
    - Edit `## Resume Prompt` code block in place
-   - DO NOT rewrite older sessions, archive blocks, or footer.
+   - DO NOT edit older session blocks in place, archive blocks, or footer.
+   - **TRIM (every turn, count-based):** after inserting today's block + bullet, run `node .claude/scripts/trim-session-handoff.mjs` (idempotent — keeps the newest 10 `### Session` blocks + 10 Current State bullets, moves the overflow to `.agents/sessions/session-handoff-archive.md`, no-op when already ≤10+10). No script in the repo yet? Copy it from the template (`.claude/scripts/trim-session-handoff.mjs`) or trim by hand: count blocks + bullets, move the oldest overflow to the archive (newest batch on top), keep the footer pointer. Detail lives in checkpoints + `docs/violation-log.md` → trimming loses nothing.
 
 4. **Checkpoint** (only if milestone: feature shipped, phase closed, V-entry logged):
    - `.agents/sessions/YYYY-MM-DD-<short-slug>.md` ≤ 200 lines
@@ -78,7 +79,8 @@ Wrap session into 3 files in ≤ 5k tokens.
 - **NEVER run tests during session-end** — no test run, ESPECIALLY not the full suite. The session already ran what it needed; re-running wastes minutes. The `tests:` field REUSES the last known result — it is NOT a reason to run anything.
 - NEVER `Write` a full handoff/active when `Edit` of one section suffices.
 - NEVER duplicate V-entry detail in active.md AND checkpoint AND handoff — pick ONE (checkpoint), link from others.
-- NEVER rewrite older session blocks — they're frozen.
+- NEVER EDIT older session blocks in place — they're frozen. (Frozen ≠ never-archived: overflow beyond the newest 10 IS moved to the archive every turn — that's trimming, not rewriting.)
+- NEVER let `SESSION_HANDOFF.md` exceed 10 session blocks / 10 Current State bullets — trim the overflow to the archive EVERY turn (COUNT cap, not byte cap). A byte cap lets the file bloat to tens of thousands of boot tokens while still "under" the size trigger.
 - NEVER dump full V-entry body into commit message — link to `docs/violation-log.md`.
 - NEVER include code blocks > 10 lines in active.md / handoff. Code lives in src/ + tests.
 

@@ -5,6 +5,28 @@
 
 ---
 
+## 📏 HARD CAP: 10 sessions (COUNT cap, not byte cap)
+
+This file carries **at most the last 10 `### Session ...` blocks + the last 10
+`## Current State` one-line bullets** — ALWAYS. `/session-end` MUST trim EVERY
+turn (not "when it gets big"):
+
+1. After inserting today's block + bullet, count the `### Session` blocks and the
+   Current State one-line bullets.
+2. If either is > 10, move the OLDEST overflow into
+   `.agents/sessions/session-handoff-archive.md` (prepend a `## Archived <date>`
+   batch at the TOP — newest archived first), delete it here, keep a footer pointer.
+3. Canonical trimmer: `node .claude/scripts/trim-session-handoff.mjs` (idempotent).
+
+**Why a COUNT cap, not a byte cap:** a size trigger (e.g. "archive when > 180 KB")
+lets the file silently accumulate dozens of session blocks — tens of thousands of
+boot tokens — while still sitting *under* the trigger. Every session then pays that
+token cost at boot for nothing. A count cap (10+10) keeps the file small forever.
+Per-session detail lives in `.agents/sessions/*.md` checkpoints + `docs/violation-log.md`,
+so trimming loses nothing. (See V-starter-16 in `docs/starter-violations.md`.)
+
+---
+
 ## Current State
 
 - **Date last updated**: YYYY-MM-DD
@@ -118,7 +140,9 @@ No deploy this turn unless user explicitly says "deploy".
 
 1. The AI auto-updates it at the end of every commit-worthy unit of work
 2. Sections that don't apply → delete or write "N/A"
-3. Don't let this file grow beyond ~200 lines — move history to
-   `.agents/sessions/` checkpoints
+3. Keep this file to the newest **10 sessions + 10 Current State bullets** —
+   `/session-end` trims the overflow to `.agents/sessions/session-handoff-archive.md`
+   EVERY turn (count cap; see the HARD CAP banner at top). This is a COUNT cap,
+   not a byte cap — don't wait for the file to "get big".
 4. The Resume Prompt block at the bottom is the KEY output — the user
    pastes it into new Claude sessions to boot context deterministically
